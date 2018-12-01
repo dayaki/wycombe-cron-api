@@ -13,151 +13,202 @@ firebase.initializeApp({
   databaseURL: "https://mosque-c9993.firebaseio.com"
 });
 
-// cron job
-// schedule tasks to be run on the server  59 23 * * *
-// cron.schedule("* * * * *", function() {
-//   console.log("---------------------");
-//   console.log("Running Cron Job");
-//   handleFirebase();
-// });
-
-const handleFirebase = () => {
+// Get prayer times for each day
+function todayNotification() {
   let db = firebase.database();
-  let ref = db.ref("mosque");
-  ref.once("value", function(snapshot) {
-    const month = new Date().toLocaleString("en-us", { month: "long" });
-    const monthDay = new Date().getDate();
+  const month = new Date().toLocaleString("en-us", { month: "long" });
+  const monthDay = new Date().getDate();
 
+  // General Prayers
+  let generalRef = db.ref("mosque");
+  generalRef.once("value", function(snapshot) {
     snapshot.val().filter(elem => {
       if (elem['monthName'] === month) {
         elem['days'].filter(status => {
           if (Number(status.Date) === monthDay) {
-            handleData(status);
+            handleGeneralPrayers(status)
           };
         });
       };
     });
   });
-}
 
-const sortUsers = ()  => {
-  let db = firebase.database();
-  let ref = db.ref("users");
-  ref.once("value", function(snapshot) {
-    const temp = Object.values(snapshot.val());
-    const { site_1, site_2, site_3, site_4, site_5 } = temp[0];
-    if (site_1 !== undefined) {
-      const playerIds = []
-      for (const key of Object.keys(site_1)) {
-        playerIds.push(site_1[key]['playerId'])
-      }
-      sortSitePrayers(playerIds, 'site1')
-    }
-    // if (site_2 !== undefined) {
-    //   const playerIds = []
-    //   for (const key of Object.keys(site_2)) {
-    //     playerIds.push(site_2[key]['playerId'])
-    //   }
-    //   sortSitePrayers(playerIds, 'site2')
-    // }
-    // if (site_3 !== undefined) {
-    //   const playerIds = []
-    //   for (const key of Object.keys(site_3)) {
-    //     playerIds.push(site_3[key]['playerId'])
-    //   }
-    //   sortSitePrayers(playerIds, 'site3')
-    // }
-    // if (site_4 !== undefined) {
-    //   const playerIds = []
-    //   for (const key of Object.keys(site_4)) {
-    //     playerIds.push(site_4[key]['playerId'])
-    //   }
-    //   sortSitePrayers(playerIds, 'site4')
-    // }
-    // if (site_5 !== undefined) {
-    //   const playerIds = []
-    //   for (const key of Object.keys(site_5)) {
-    //     playerIds.push(site_5[key]['playerId'])
-    //   }
-    //   sortSitePrayers(playerIds, 'site5')
-    // }
-  });
-}
-
-sortSitePrayers = (users, site) => {
-  const month = new Date().toLocaleString("en-us", { month: "long" });
-  const monthDay = new Date().getDate();
-
-  let db1 = firebase.database();
-  let ref1 = db1.ref(site);
-  ref1.once("value", function(snapshot) {
+  // site 1
+  let site1Ref = db.ref("site1");
+  site1Ref.once("value", function(snapshot) {
     snapshot.val()['congregationalPrayers'].filter(elem => {
       if (elem['monthName'] === month) {
         elem['days'].filter(status => {
           if (Number(status.Date) === monthDay) {
-            prepareSiteNotification(site, users, status);
+            handleSitePrayers(status, 'site_1');
           };
         });
       };
     });
   });
+
+  // site 2
+  let site2Ref = db.ref("site2");
+  site2Ref.once("value", function(snapshot) {
+    snapshot.val()['congregationalPrayers'].filter(elem => {
+      if (elem['monthName'] === month) {
+        elem['days'].filter(status => {
+          if (Number(status.Date) === monthDay) {
+            handleSitePrayers(status, 'site_2');
+          };
+        });
+      };
+    });
+  });
+
+  // site 3
+  let site3Ref = db.ref("site3");
+  site3Ref.once("value", function(snapshot) {
+    snapshot.val()['congregationalPrayers'].filter(elem => {
+      if (elem['monthName'] === month) {
+        elem['days'].filter(status => {
+          if (Number(status.Date) === monthDay) {
+            handleSitePrayers(status, 'site_3');
+          };
+        });
+      };
+    });
+  });
+
+  // site 4
+  // let site4Ref = db.ref("site4");
+  // site4Ref.once("value", function(snapshot) {
+  //   snapshot.val()['congregationalPrayers'].filter(elem => {
+  //     if (elem['monthName'] === month) {
+  //       elem['days'].filter(status => {
+  //         if (Number(status.Date) === monthDay) {
+  //           handleSitePrayers(status, 'site_4');
+  //         };
+  //       });
+  //     };
+  //   });
+  // });
+
+  // site 5
+  // let site5Ref = db.ref("site5");
+  // site5Ref.once("value", function(snapshot) {
+  //   snapshot.val()['congregationalPrayers'].filter(elem => {
+  //     if (elem['monthName'] === month) {
+  //       elem['days'].filter(status => {
+  //         if (Number(status.Date) === monthDay) {
+  //           handleSitePrayers(status, 'site_5');
+  //         };
+  //       });
+  //     };
+  //   });
+  // });
+
 }
 
-const handleData = (dates) => {
-  // console.log(dates)
-  sendNotification(dates.Sunrise, 'Sunrise Prayer');
-  sendNotification(dates.Prayer1, 'Prayer 1');
-  sendNotification(dates.Prayer2, 'Prayer 2');
-  sendNotification(dates.Prayer3, 'Prayer 3');
-  sendNotification(dates.Prayer4, 'Prayer 4');
-  sendNotification(dates.Prayer5, 'Prayer 5');
-}
-
-const sendNotification = (date, type) => {
-  // console.log(date)
-  //const setTime = new Date(new Date().setHours(Number(date.split(":")[0]), date.split(":")[1])).toUTCString();
-  // let setTime = new Date(new Date().setHours(21, 10)).toString();
-  //console.log(setTime)
-  // console.log(new Date(new Date().setHours(Number(date.split(":")[0]) + 1, date.split(":")[1])))
-
-  axios.defaults.headers.common['Authorization'] = 'Basic NzJlYjYxNzAtMTkxOS00ZTAyLWEwMDQtNDQ2ZDUzNmU1NmE1';
-  axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
-  axios.post('https://onesignal.com/api/v1/notifications', {
-    app_id: '88a283bb-dcc8-453f-b0ca-1b50df5f07e2',
-    included_segments: ['General Prayers'],
-    send_after: new Date(new Date().setHours(Number(date.split(":")[0]) + 1, date.split(":")[1])),
-    // send_after: new Date(),
-    contents: {
-      'en': type  + ' has started!!!.'
-    },
-    headings: {
-      'en': 'Wycombe Mosque'
-    },
-    android_sound: 'notification',
-    priority: 10
-  }).then(function (response) {
-    console.log(response.data);
-  }).catch(function (error) {
-    console.log(error);
+function handleGeneralPrayers(prayerTimes) {
+  let db = firebase.database();
+  let ref = db.ref("users");
+  ref.once("value", function(snapshot) {
+    const temp = Object.values(snapshot.val());
+    const { general } = temp[0];
+    const { prayer_1, prayer_2, prayer_3, prayer_4, prayer_5 } = general;
+    if (prayer_1 !== undefined) {
+      const playerIds = []
+      for (const key of Object.keys(prayer_1)) {
+        playerIds.push(prayer_1[key].playerId)
+      }
+      handleDailyNotification(playerIds, 'Prayer1', prayerTimes);
+    }
+    if (prayer_2 !== undefined) {
+      const playerIds = []
+      for (const key of Object.keys(prayer_2)) {
+        playerIds.push(prayer_2[key].playerId)
+      }
+      handleDailyNotification(playerIds, 'Prayer2', prayerTimes);
+    }
+    if (prayer_3 !== undefined) {
+      const playerIds = []
+      for (const key of Object.keys(prayer_3)) {
+        playerIds.push(prayer_3[key].playerId)
+      }
+      handleDailyNotification(playerIds, 'Prayer3', prayerTimes);
+    }
+    if (prayer_4 !== undefined) {
+      const playerIds = []
+      for (const key of Object.keys(prayer_4)) {
+        playerIds.push(prayer_4[key].playerId)
+      }
+      handleDailyNotification(playerIds, 'Prayer4', prayerTimes);
+    }
+    if (prayer_5 !== undefined) {
+      const playerIds = []
+      for (const key of Object.keys(prayer_5)) {
+        playerIds.push(prayer_5[key].playerId)
+      }
+      handleDailyNotification(playerIds, 'Prayer5', prayerTimes);
+    }
   });
 }
 
-const prepareSiteNotification = (site, users, times) => {
-  const time = Object.values(times).slice(1);
-  time.forEach(time => sendSiteNotification(users, time))
+function handleSitePrayers(prayerTimes, site) {
+  let db = firebase.database();
+  let ref = db.ref("users");
+  ref.once("value", function(snapshot) {
+    const temp = Object.values(snapshot.val());
+    const siteDetails = temp[0][site];
+    if (siteDetails !== undefined) {
+      const { prayer_1, prayer_2, prayer_3, prayer_4, prayer_5 } = siteDetails;
+      if (prayer_1 !== undefined) {
+        const playerIds = []
+        for (const key of Object.keys(prayer_1)) {
+          playerIds.push(prayer_1[key].playerId)
+        }
+        handleDailySiteNotification(playerIds, 'Prayer1', prayerTimes);
+      }
+      if (prayer_2 !== undefined) {
+        const playerIds = []
+        for (const key of Object.keys(prayer_2)) {
+          playerIds.push(prayer_2[key].playerId)
+        }
+        handleDailySiteNotification(playerIds, 'Prayer2', prayerTimes);
+      }
+      if (prayer_3 !== undefined) {
+        const playerIds = []
+        for (const key of Object.keys(prayer_3)) {
+          playerIds.push(prayer_3[key].playerId)
+        }
+        handleDailySiteNotification(playerIds, 'Prayer3', prayerTimes);
+      }
+      if (prayer_4 !== undefined) {
+        const playerIds = []
+        for (const key of Object.keys(prayer_4)) {
+          playerIds.push(prayer_4[key].playerId)
+        }
+        handleDailySiteNotification(playerIds, 'Prayer4', prayerTimes);
+      }
+      if (prayer_5 !== undefined) {
+        const playerIds = []
+        for (const key of Object.keys(prayer_5)) {
+          playerIds.push(prayer_5[key].playerId)
+        }
+        handleDailySiteNotification(playerIds, 'Prayer5', prayerTimes);
+      } 
+    }
+  });
 }
 
-const sendSiteNotification = (users, time) => {
-  let setTime = new Date(new Date().setHours(Number(time.split(":")[0]) + 1, time.split(":")[1]));
-
+function handleDailyNotification(ids, type, times) {
+  const sendTime = times[type];
+  let setTime = new Date(new Date().setHours(Number(sendTime.split(":")[0]) + 1, sendTime.split(":")[1]));
+  // console.log(setTime + " - " + new Date())
   axios.defaults.headers.common['Authorization'] = 'Basic NzJlYjYxNzAtMTkxOS00ZTAyLWEwMDQtNDQ2ZDUzNmU1NmE1';
   axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
   axios.post('https://onesignal.com/api/v1/notifications', {
     app_id: '88a283bb-dcc8-453f-b0ca-1b50df5f07e2',
-    include_player_ids: users,
+    include_player_ids: ids,
     send_after: setTime,
     contents: {
-      'en': 'Site prayer has started.'
+      'en': `${type} prayer has started`
     },
     headings: {
       'en': 'Wycombe Mosque'
@@ -167,28 +218,39 @@ const sendSiteNotification = (users, time) => {
   }).then(function (response) {
     console.log(response.data);
   }).catch(function (error) {
-    console.log(error);
+    console.log(error.response.data);
   });
 }
 
-// function check() {
-//   axios.defaults.headers.common['Authorization'] = 'Basic NzJlYjYxNzAtMTkxOS00ZTAyLWEwMDQtNDQ2ZDUzNmU1NmE1';
-//   axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
-//   axios.get('https://onesignal.com/api/v1/notifications/e16fe2b0-e385-4a84-a192-8038c8c5f889?app_id=88a283bb-dcc8-453f-b0ca-1b50df5f07e2')
-//   .then(function (response) {
-//     // handle success
-//     console.log(response.data);
-//   })
-//   .catch(function (error) {
-//     // handle error
-//     console.log(error);
-//   })
-//   .then(function () {
-//     // always executed
-//   });
-// }
+function handleDailySiteNotification(ids, type, times) {
+  const sendTime = times[type];
+  const setTime = new Date(new Date().setHours(Number(sendTime.split(":")[0]) + 1, sendTime.split(":")[1]));
 
-handleFirebase();
+  axios.defaults.headers.common['Authorization'] = 'Basic NzJlYjYxNzAtMTkxOS00ZTAyLWEwMDQtNDQ2ZDUzNmU1NmE1';
+  axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
+  axios.post('https://onesignal.com/api/v1/notifications', {
+    app_id: '88a283bb-dcc8-453f-b0ca-1b50df5f07e2',
+    include_player_ids: ids,
+    send_after: setTime,
+    contents: {
+      'en': `${type} prayer has started`
+    },
+    headings: {
+      'en': 'Wycombe Mosque'
+    },
+    android_sound: 'notification',
+    priority: 10
+  }).then(function (response) {
+    console.log(response.data);
+  }).catch(function (error) {
+    console.log(error.response.data);
+  });
+}
+
+
+
+todayNotification();
+// handleFirebase();
 // sortUsers();
 // check()
 
