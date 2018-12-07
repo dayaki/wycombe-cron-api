@@ -5,7 +5,9 @@ const fs          = require("fs");
 const axios       = require('axios');
 const moment      = require('moment');
 
-const app         = express();
+// app  = express();
+let app = express();
+let router = express.Router();
 
 // Firebase setup
 const firebase = require("firebase-admin");
@@ -318,4 +320,9 @@ function handleDailySiteNotification(ids, snooze, type, times) {
 // sortUsers();
 // check()
 
-app.listen(3128);
+// app.listen(3128);
+// listen (start app with node server.js) =====================
+// app.listen(config.port);
+const port = process.env.PORT || 3000;
+app.listen(port);
+console.log('Dragons are alive at port ' + port);
