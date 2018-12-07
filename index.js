@@ -17,56 +17,42 @@ firebase.initializeApp({
   databaseURL: "https://mosque-c9993.firebaseio.com"
 });
 
-// cron job
+// PRODUCTION cron job
 //schedule tasks to be run on the server 
-// run the script every 11:59pm use - 59 23 * * *
-//     * * * * * *
-//     | | | | | |
-//     | | | | | day of week
-//     | | | | month
-//     | | | day of month
-//     | | hour
-//     | minute
-//     second ( optional )
-//
-// 10 01 * * * = every 01:01am daily
-//  5 * * * *
-//
-
-// cron.schedule('* * * * *', () => {
-//   console.log('running a task every minute');
-// }); 0,30 * * * *
-//0 8 * * * every day (including weekdays) at 8am
-
-cron.schedule('*/2 * * * *', () => {
+cron.schedule('0 2 * * *', () => {
   console.log("---------------------");
   console.log("Running Cron Job");
-  // handleFirebase();
-  testCronJob();
+  todayNotification();
 });
 
-function testCronJob() {
-  axios.defaults.headers.common['Authorization'] = 'Basic NzJlYjYxNzAtMTkxOS00ZTAyLWEwMDQtNDQ2ZDUzNmU1NmE1';
-    axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
-    axios.post('https://onesignal.com/api/v1/notifications', {
-      app_id: '88a283bb-dcc8-453f-b0ca-1b50df5f07e2',
-      include_player_ids: ['ee27ddbc-a639-44d2-a805-19758e13ac1f'],
-      send_after: new Date(),
-      contents: {
-        // 'en': `${type} will be starting in ${60 - moment(setTime).get('minute')} minutues.`
-        'en': `Testing Cron jobs`
-      },
-      headings: {
-        'en': 'Wycombe Mosque'
-      },
-      android_sound: 'notification',
-      priority: 10
-    }).then(function (response) {
-      console.log(response.data);
-    }).catch(function (error) {
-      console.log(error.response.data);
-    });
-}
+// LOCAL cron job
+// cron.schedule('*/2 * * * *', () => {
+//   console.log("---------------------");
+//   console.log("Running Cron Job");
+//   testCronJob();
+// });
+// function testCronJob() {
+//   axios.defaults.headers.common['Authorization'] = 'Basic NzJlYjYxNzAtMTkxOS00ZTAyLWEwMDQtNDQ2ZDUzNmU1NmE1';
+//     axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
+//     axios.post('https://onesignal.com/api/v1/notifications', {
+//       app_id: '88a283bb-dcc8-453f-b0ca-1b50df5f07e2',
+//       include_player_ids: ['ee27ddbc-a639-44d2-a805-19758e13ac1f'],
+//       send_after: new Date(),
+//       contents: {
+//         // 'en': `${type} will be starting in ${60 - moment(setTime).get('minute')} minutues.`
+//         'en': `Testing Cron jobs`
+//       },
+//       headings: {
+//         'en': 'Wycombe Mosque'
+//       },
+//       android_sound: 'notification',
+//       priority: 10
+//     }).then(function (response) {
+//       console.log(response.data);
+//     }).catch(function (error) {
+//       console.log(error.response.data);
+//     });
+// }
 
 // Get prayer times for each day
 function todayNotification() {
@@ -316,13 +302,8 @@ function handleDailySiteNotification(ids, snooze, type, times) {
 
 
 // todayNotification();
-// handleFirebase();
-// sortUsers();
-// check()
 
-// app.listen(3128);
 // listen (start app with node server.js) =====================
-// app.listen(config.port);
 const port = process.env.PORT || 3000;
 app.listen(port);
 console.log('Dragons are alive at port ' + port);
